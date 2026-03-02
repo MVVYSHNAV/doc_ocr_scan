@@ -31,6 +31,33 @@ def process_invoice_ocr(doc_name):
         # 2. Docling structure layer (fail-safe)
         engine, raw = _run_docling(file_path, raw)
 
+        # 2b. Fallback: If Docling found NO items, try extracting from Tesseract text
+        if not raw.get("items") and raw.get("raw_text"):
+            fallback_items = []
+            # Look for typical item lines ending with dollar/currency amounts
+            # E.g., DO: "zabbix-updated (s-lvcpu-2gb) 672 02-01 00:00 03-01 00:00 $12.00"
+            for line in raw["raw_text"].split("\n"):
+                # matches things like: <Item Description> ... $12.34
+                m = re.search(r'^([A-Za-z0-9_( \)-]+(?:(?:20\d{2}|[0-3]\d-[0-1]\d)[ \d:]+)*)\s+(?:[₹$£€])?([\d.,]+)$', line.strip())
+                if m:
+                    desc_raw = m.group(1).strip()
+                    amt_str = m.group(2)
+                    amt, _ = normalize_float(amt_str)
+                    
+                    # Ignore random totals lines
+                    skip_words = ["total", "due", "payable", "summary", "tax", "gst", "page "]
+                    is_total_line = any(w in desc_raw.lower() for w in skip_words)
+                    
+                    if amt > 0 and len(desc_raw) > 3 and not is_total_line:
+                        fallback_items.append({
+                            "description": desc_raw[:140],
+                            "quantity": 1,
+                            "rate": amt,
+                            "amount": amt,
+                            "tax": 0
+                        })
+            raw["items"] = fallback_items
+
         # 3. Normalise + validate
         data = normalize_and_validate(raw)
         data["engine"] = engine
@@ -108,6 +135,7 @@ def _persist(doc_name, data, engine):
 
     # Enrich items with computed tax / grand_total / item_name before saving JSON
     enriched_items = []
+    items_list = [item for item in items_list if bool(item.get("description") or item.get("item_name"))] # Filter out empty items
     for item in items_list:
         item_amt  = item.get("amount", 0)
         item_tax  = item.get("tax", 0)
@@ -186,9 +214,10 @@ def parse_invoice_text(text):
 
     # ── Invoice Number ────────────────────────────────────────────────
     for pat in [
-        r'(?i)invoice\s*(?:no|num|number|#|id)?[\s:\.]+([A-Z0-9][A-Z0-9/_-]{2,})',
-        r'(?i)bill\s*(?:no|number)?[\s:\.]+([A-Z0-9][A-Z0-9/_-]{2,})',
-        r'(?i)receipt\s*(?:no|number)?[\s:\.]+([A-Z0-9][A-Z0-9/_-]{2,})',
+        r'(?i)invoice\s*(?:no|num|number|#|id)[\s:\.]+([A-Z0-9][A-Z0-9/_-]{2,})',
+        r'(?i)bill\s*(?:no|number)[\s:\.]+([A-Z0-9][A-Z0-9/_-]{2,})',
+        r'(?i)receipt\s*(?:no|number)[\s:\.]+([A-Z0-9][A-Z0-9/_-]{2,})',
+        r'(?i)invoice[\s:]+([A-Z0-9][A-Z0-9/_-]{4,})', # Fallback for "Invoice: 12345"
     ]:
         m = re.search(pat, text)
         if m:
@@ -198,7 +227,9 @@ def parse_invoice_text(text):
     # ── Invoice Date ──────────────────────────────────────────────────
     # Most specific first: "Invoice date ........ 31 Jan 2026" (dotted separator, word month)
     for pat in [
+        r'(?i)(?:date\s+of\s+issue|issue\s+date)[\s:\.]+([A-Za-z]{3,9}\s+\d{1,2},?\s+\d{4})',
         r'(?i)invoice\s*date[\s:\.]+([0-9]{1,2}\s+[A-Za-z]{3,9}\s+[0-9]{4})',
+        r'(?i)invoice\s*date[\s:\.]+([A-Za-z]{3,9}\s+\d{1,2},?\s+\d{4})',
         r'(?i)invoice\s*date[\s:\.]+(\d{1,4}[-/\.]\d{1,2}[-/\.]\d{1,4})',
         r'(?i)(?:bill|issued?)\s*date[\s:\.]+(\d{1,4}[-/\.]\d{1,2}[-/\.]\d{1,4})',
         r'(?i)(?:bill|issued?)\s*date[\s:]+([0-9]{1,2}\s+[A-Za-z]{3,9}\s+[0-9]{4})',
@@ -216,7 +247,7 @@ def parse_invoice_text(text):
     _NUM  = r'([0-9][0-9,]*(?:\.[0-9]{1,2})?)'
 
     for pat in [
-        rf'(?i)(?:grand\s*total|total\s*amount|amount\s*due|total\s*payable|amount\s*payable)[\s:]+{_CURR}{_NUM}',
+        rf'(?i)(?:grand\s*total|total\s*amount|amount\s*due|total\s*payable|amount\s*payable|total\s*due)[\s:]+{_CURR}{_NUM}',
         rf'(?i)(?:total\s+in\s+(?:inr|usd|gbp|eur))[\s:]+{_CURR}{_NUM}',
         rf'(?i)(?:net\s*total)[\s:]+{_CURR}{_NUM}',
     ]:
