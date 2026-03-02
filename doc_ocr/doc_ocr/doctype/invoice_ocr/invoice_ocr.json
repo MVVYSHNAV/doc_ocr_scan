@@ -1,0 +1,199 @@
+{
+    "actions": [],
+    "allow_rename": 1,
+    "autoname": "format:INV-OCR-{YY}-{MM}-{###}",
+    "creation": "2026-03-02 10:54:04.089645",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "inovice_details_section",
+        "party_type",
+        "column_break_tclo",
+        "party_name",
+        "invoice_date",
+        "file_uplaod_section",
+        "ocr_status",
+        "ocr_engine",
+        "column_break_csjo",
+        "file",
+        "invoice_summary_section",
+        "name1",
+        "tax_amount",
+        "column_break_ykxc",
+        "invoice_number",
+        "grand_total",
+        "extracted_data_section",
+        "extracted_data",
+        "invoice_type",
+        "create_invoice",
+        "invoice_items_section",
+        "table_seys",
+        "section_break_3raq",
+        "amended_from"
+    ],
+    "fields": [
+        {
+            "fieldname": "inovice_details_section",
+            "fieldtype": "Section Break",
+            "label": "Inovice Details"
+        },
+        {
+            "fieldname": "party_type",
+            "fieldtype": "Select",
+            "label": "Party Type",
+            "options": "Customer\nSupplier"
+        },
+        {
+            "fieldname": "column_break_tclo",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "Today",
+            "fieldname": "invoice_date",
+            "fieldtype": "Date",
+            "label": "Invoice Date"
+        },
+        {
+            "fieldname": "file_uplaod_section",
+            "fieldtype": "Section Break",
+            "label": "File Uplaod"
+        },
+        {
+            "fieldname": "ocr_status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "OCR Status",
+            "options": "Pending\nProcessing\nExtracted\nFailed"
+        },
+        {
+            "default": "Tesseract + Docling",
+            "fieldname": "ocr_engine",
+            "fieldtype": "Data",
+            "label": "OCR Engine",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_csjo",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "file",
+            "fieldtype": "Attach",
+            "label": "Upload Invoice"
+        },
+        {
+            "fieldname": "invoice_summary_section",
+            "fieldtype": "Section Break",
+            "label": "Invoice Summary"
+        },
+        {
+            "fieldname": "name1",
+            "fieldtype": "Data",
+            "label": "Supplier / Customer Name"
+        },
+        {
+            "fieldname": "column_break_ykxc",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "invoice_number",
+            "fieldtype": "Data",
+            "label": "Invoice Number"
+        },
+        {
+            "fieldname": "extracted_data_section",
+            "fieldtype": "Section Break",
+            "label": "Extracted Data"
+        },
+        {
+            "fieldname": "extracted_data",
+            "fieldtype": "Code",
+            "label": "Extracted Data"
+        },
+        {
+            "fieldname": "invoice_type",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Invoice Type",
+            "options": "Sales Invoice\nPurchase Invoice",
+            "reqd": 1
+        },
+        {
+            "fieldname": "create_invoice",
+            "fieldtype": "Button",
+            "label": "Create Invoice"
+        },
+        {
+            "fieldname": "invoice_items_section",
+            "fieldtype": "Section Break",
+            "label": "Invoice Items"
+        },
+        {
+            "fieldname": "table_seys",
+            "fieldtype": "Table",
+            "label": "Invoice Items",
+            "options": "Invoice OCR Item"
+        },
+        {
+            "fieldname": "section_break_3raq",
+            "fieldtype": "Section Break"
+        },
+        {
+            "fieldname": "amended_from",
+            "fieldtype": "Link",
+            "label": "Amended From",
+            "no_copy": 1,
+            "options": "Invoice OCR",
+            "print_hide": 1,
+            "read_only": 1,
+            "search_index": 1
+        },
+        {
+            "fieldname": "tax_amount",
+            "fieldtype": "Float",
+            "label": "Tax"
+        },
+        {
+            "fieldname": "grand_total",
+            "fieldtype": "Float",
+            "label": "Grand Amount"
+        },
+        {
+            "fieldname": "party_name",
+            "fieldtype": "Dynamic Link",
+            "label": "Party Name",
+            "options": "party_type"
+        }
+    ],
+    "grid_page_length": 50,
+    "index_web_pages_for_search": 1,
+    "is_submittable": 1,
+    "links": [],
+    "modified": "2026-03-02 16:05:27.000366",
+    "modified_by": "Administrator",
+    "module": "Doc Ocr",
+    "name": "Invoice OCR",
+    "naming_rule": "Expression (old style)",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "submit": 1,
+            "write": 1
+        }
+    ],
+    "row_format": "Dynamic",
+    "rows_threshold_for_grid_search": 20,
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}

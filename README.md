@@ -39,3 +39,23 @@ This app can use GitHub Actions for CI. The following workflows are configured:
 ### License
 
 mit
+# Invoice OCR App
+
+OCR-powered invoice extraction and ERPNext invoice creation from scanned PDFs and images.
+
+## Features
+
+- **OCR extraction** from scanned PDFs and images using Tesseract
+- **Automatic parsing** of invoice header and line items
+- **Support for both Sales and Purchase invoices**
+- **Seamless integration** with ERPNext Customers, Suppliers, and Invoices
+- **Background OCR processing** with clear status tracking
+- **Manual review before invoice creation (audit-safe)**
+
+## Workflow
+
+1. Upload a scanned or digital PDF/Image to an **Invoice OCR** document and click Save.
+2. Click **Run OCR** to trigger background extraction.
+3. Review the parsed lines and details in the document.
+4. Set the **Invoice Type** and **Party**, then **Submit** the record.
+5. Click **Create Invoice** to push the items natively to standard ERPNext modules.
