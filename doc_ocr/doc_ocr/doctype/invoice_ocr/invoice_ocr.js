@@ -147,7 +147,7 @@ frappe.ui.form.on("Invoice OCR", {
             let row = frm.add_child("table_seys");
             let name = item.item_name || item.description || "OCR Item";
             frappe.model.set_value(row.doctype, row.name, "item_name", name);
-            frappe.model.set_value(row.doctype, row.name, "item_description", name);
+            frappe.model.set_value(row.doctype, row.name, "item_description", item.description || name);
             frappe.model.set_value(row.doctype, row.name, "quantity", item.quantity || 1);
             frappe.model.set_value(row.doctype, row.name, "rate", item.rate || 0);
             frappe.model.set_value(row.doctype, row.name, "sub_total", item.amount || 0);

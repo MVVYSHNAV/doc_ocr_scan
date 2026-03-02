@@ -14,8 +14,8 @@ def create_invoice(doc_name):
     # ── Party / Type validation ────────────────────────────────────────
     if not doc.invoice_type:
         frappe.throw("Please select an Invoice Type (Sales Invoice or Purchase Invoice)")
-    if not doc.party_type or not doc.party:
-        frappe.throw("Please select a Party Type and a Party before creating an invoice")
+    if not doc.party_type or not doc.name1:
+        frappe.throw("Please select a Party Type and a Party Name before creating an invoice")
 
     if doc.invoice_type == "Sales Invoice" and doc.party_type != "Customer":
         frappe.throw("Sales Invoice requires Party Type to be 'Customer'")
@@ -43,9 +43,9 @@ def create_invoice(doc_name):
     inv = frappe.new_doc(doc.invoice_type)
 
     if doc.invoice_type == "Sales Invoice":
-        inv.customer = doc.party
+        inv.customer = doc.name1
     else:
-        inv.supplier = doc.party
+        inv.supplier = doc.name1
 
     if doc.invoice_date:
         inv.posting_date = doc.invoice_date

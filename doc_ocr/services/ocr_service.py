@@ -155,7 +155,7 @@ def _persist(doc_name, data, engine):
         row.parentfield      = "table_seys"
         row.idx              = idx
         row.item_name        = item["item_name"]
-        row.item_description = item["item_name"]
+        row.item_description = item["description"]
         row.quantity         = item["quantity"]
         row.rate             = item["rate"]
         row.sub_total        = item["amount"]
