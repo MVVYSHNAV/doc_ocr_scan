@@ -108,17 +108,4 @@ class LayoutDetector:
         else:
             return "value"
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Usage Example
-# ─────────────────────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    # Test runner script
-    print("Initializing Layout Detector...")
-    detector = LayoutDetector()
-    
-    # Example usage (point to a real image or PDF path to test):
-    # result = detector.process_file('/path/to/invoice.pdf')
-    # for page in result:
-    #     for block in page['blocks']:
-    #         print(f"Type: {block['type']} | Text: {block['text'].replace(chr(10), ' ')}")
-    print("Algorithm ready for integration.")
+

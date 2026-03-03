@@ -137,6 +137,8 @@ frappe.ui.form.on("Invoice OCR", {
         // Map header fields
         if (data.invoice_number) frm.set_value("invoice_number", data.invoice_number);
         if (data.invoice_date) frm.set_value("invoice_date", data.invoice_date);
+        if (data.party_type) frm.set_value("party_type", data.party_type);
+        if (data.invoice_type) frm.set_value("invoice_type", data.invoice_type);
         if (data.party_name) frm.set_value("name1", data.party_name);
         if (data.tax_amount) frm.set_value("tax_amount", data.tax_amount);
         if (data.grand_total) frm.set_value("grand_total", data.grand_total);

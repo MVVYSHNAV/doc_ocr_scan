@@ -224,8 +224,13 @@ def parse_invoice_headers_and_totals(text):
                 data["subtotal"] = val
                 break
 
-    # Party Name
-    data["party_name"] = _extract_party_name(text)
+    party_name, party_type = _extract_party_info(text)
+    data["party_name"] = party_name
+    
+    if party_type:
+        data["party_type"] = party_type
+        data["invoice_type"] = "Purchase Invoice" if party_type == "Supplier" else "Sales Invoice"
+        
     return data
 
 
@@ -386,17 +391,84 @@ def _resolve_file_path(doc):
     return path
 
 _SKIP_LINE_RE = re.compile(r'^(?:IRN|GSTIN|PAN|CIN|TAN|UIN|HSN|SAC|GST|Page)\s*[:0-9a-f]', re.IGNORECASE)
-def _extract_party_name(text):
-    m = re.search(r'(?i)bill(?:ed)?\s*to\s*[\n:]+\s*(.+)', text)
+def _extract_party_info(text):
+    # 1. Find the Sender (Top of the document)
+    sender = ""
+    for line in text.split("\n"):
+        line = line.strip()
+        # skip short lines or obvious non-party lines
+        if len(line) >= 5 and not _SKIP_LINE_RE.match(line) and not re.search(r'(?i)invoice|statement|receipt|bill', line):
+            # clean formatting
+            m2 = re.search(r'^[0-9\W]+(.*)', line)
+            sender = m2.group(1).strip() if m2 else line
+            break
+            
+    # 2. Find the Receiver (Bill To section)
+    receiver = ""
+    m = re.search(r'(?i)bill(?:ed)?\s*to(?:[^\n:]*)?[\n:]+\s*([^\n]+)', text)
     if m:
         candidate = m.group(1).strip()
         if candidate and not _SKIP_LINE_RE.match(candidate):
-            return candidate
-    for line in text.split("\n"):
-        line = line.strip()
-        if len(line) >= 5 and not _SKIP_LINE_RE.match(line):
-            return line
-    return ""
+            receiver = candidate
+
+    host_company = frappe.defaults.get_user_default("Company") or ""
+    host_company_lower = host_company.lower()
+    
+    # helper to check if a string represents the host company
+    def is_host(name):
+        name_l = name.lower()
+        if host_company_lower and (host_company_lower in name_l or name_l in host_company_lower):
+            return True
+            
+        # Fallback to the first substantive word of the host company 
+        # (e.g. "Acme Corp Ltd" -> "acme")
+        if host_company_lower:
+            first_word = host_company_lower.split()[0]
+            if len(first_word) >= 3 and first_word in name_l:
+                return True
+                
+        return False
+        
+    is_purchase_invoice = False
+    
+    # If the sender is explicitly the host company -> Sales Invoice
+    if is_host(sender):
+        is_purchase_invoice = False
+        raw_party = receiver if receiver else "Unknown Customer"
+    else:
+        # If Sender is NOT us, it's probably a Purchase Invoice
+        is_purchase_invoice = True
+        raw_party = sender
+        
+    party_type = ""
+    party_name = raw_party
+    
+    try:
+        # Check exact matches first
+        if frappe.db.exists("Supplier", raw_party):
+            return raw_party, "Supplier"
+        if frappe.db.exists("Customer", raw_party):
+            return raw_party, "Customer"
+            
+        # Check partial/contains match
+        suppliers = frappe.get_all("Supplier", filters={"name": ("like", f"%{raw_party}%")}, limit=1)
+        if suppliers:
+            return suppliers[0].name, "Supplier"
+            
+        customers = frappe.get_all("Customer", filters={"name": ("like", f"%{raw_party}%")}, limit=1)
+        if customers:
+            return customers[0].name, "Customer"
+            
+        # fallback default based on classification
+        if is_purchase_invoice:
+            return raw_party, "Supplier"
+        else:
+            return raw_party, "Customer"
+            
+    except Exception:
+        pass
+        
+    return party_name, party_type
 
 def _persist(doc_name, data, engine):
     items_list      = data.get("items", [])
@@ -439,6 +511,8 @@ def _persist(doc_name, data, engine):
     if data.get("invoice_number"): update["invoice_number"] = data["invoice_number"]
     if data.get("invoice_date"):   update["invoice_date"]   = data["invoice_date"]
     if data.get("party_name"):     update["name1"]          = data["party_name"]
+    if data.get("party_type"):     update["party_type"]     = data["party_type"]
+    if data.get("invoice_type"):   update["invoice_type"]   = data["invoice_type"]
     if data.get("tax_amount"):     update["tax_amount"]     = data["tax_amount"]
     if data.get("grand_total"):    update["grand_total"]    = data["grand_total"]
 

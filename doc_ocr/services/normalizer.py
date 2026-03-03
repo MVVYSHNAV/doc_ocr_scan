@@ -209,8 +209,12 @@ def normalize_and_validate(parsed_data):
         if not ok and parsed_data.get(field):
             all_warnings.append(f"Could not parse {field}: '{parsed_data.get(field)}'")
 
-    # Party Name
+    # Party Name & Types
     result["party_name"] = (parsed_data.get("party_name") or "").strip()
+    if parsed_data.get("party_type"):
+        result["party_type"] = parsed_data["party_type"]
+    if parsed_data.get("invoice_type"):
+        result["invoice_type"] = parsed_data["invoice_type"]
 
     # Line Items
     raw_items = parsed_data.get("items") or []
