@@ -39,24 +39,68 @@ This app can use GitHub Actions for CI. The following workflows are configured:
 ### License
 
 mit
-# Invoice OCR App
 
-OCR-powered invoice extraction and ERPNext invoice creation from scanned PDFs and images.
+# Invoice OCR for Frappe/ERPNext
 
-## Features
+A highly optimized OCR-powered invoice extraction and document creation engine for standard Frappe / ERPNext environments.
 
-- **Hybrid Extraction Engine**: Uses `Tesseract` for raw text and high-level header extraction, and IBM's `Docling` specifically for state-of-the-art tabular line item extraction.
-- **Automatic Parsing & Normalization**: Automatically extracts Party Name, Invoice Number, Date, Subtotal, Tax, and Grand Total. Normalizes currencies and dates.
-- **Smart Line Item Mapping**: Maps both Item Name (e.g., "Workspace Subscription") and Item Description (e.g., "Usage") perfectly into separate line fields.
-- **Fast UI Polling**: The frontend automatically polls the background OCR job and populates the screen instantly upon completion without requiring a page reload.
-- **Pre-flight Validation**: Blocks submission if the extracted Party Name doesn't actually exist as a Customer/Supplier in your ERPNext database, ensuring high data cleanliness.
-- **Create Invoices Natively**: One-click generation of Sales or Purchase invoices, automatically falling back to your Company's default Income/Expense accounts to ensure smooth insertion.
+## Core Features
 
-## Workflow
+- **Hybrid AI Extraction Engine:** Uses `Tesseract` for text parsing, AI-powered IBM `Docling` specifically for tabular line-item understanding, and custom `OpenCV` morphological mapping as an ultimate fallback for chaotic unstructured documents.
+- **Smart Line Item Mapping:** Extracts Item Name, Description, Quantity, Rate, Subtotal, and Tax perfectly into distinct line fields.
+- **Auto-Detection for Sales/Purchase:** Automatically classifies uploaded documents into **Sales Invoices** or **Purchase Invoices** based on the configured Host Company in ERPNext.
+- **Auto-Matches Customers & Suppliers:** Queries your Frappe database dynamically to auto-link the detected party with a live Customer or Supplier.
+- **Instant Pre-flight Validation:** Automatically generates an OCR Confidence Score. Warns if totals do not reconcile, ensuring high data cleanliness before submission.
+- **Create Invoices Natively:** One-click generation of native ERPNext Sales or Purchase invoices, automatically mapping items to default income/expense accounts.
 
-1. Upload a scanned or digital PDF/Image to an **Invoice OCR** document and click Save (the OCR extraction triggers automatically in the background).
-2. The page will auto-update as soon as the text, totals, and line items are populated.
-3. Review the parsed lines and details in the document. You can also click **View Raw JSON** to see the raw extracted structure and OCR Confidence Score.
-4. Set the **Party Type** (Customer/Supplier). Ensure the extracted **Party Name** exists in your system exactly as written (or edit it to match). 
+---
+
+## 🚀 Easy Installation Guide
+
+Follow these steps to seamlessly pull the OCR Engine into your active Frappe/ERPNext site.
+
+### 1. Install System Dependencies
+
+Because the App utilizes `Tesseract` and `Computer Vision`, you must install the native C++ libraries required by your Linux distribution for PDF processing and image parsing:
+```bash
+sudo apt-get update
+sudo apt-get install tesseract-ocr
+sudo apt-get install poppler-utils
+sudo apt-get install libgl1
+```
+
+### 2. Fetch the Application
+
+Pull the OCR App into your `frappe-bench`:
+```bash
+cd /path/to/your/frappe-bench
+bench get-app https://github.com/MVVYSHNAV/doc_ocr_scan.git --branch develop
+```
+
+### 3. Install Python Dependencies
+
+The backend engine requires several advanced packages not typically packaged with Frappe base (like IBM Docling & PyTesseract).
+Install them directly to the active bench virtual environment using `pip`:
+```bash
+./env/bin/pip install pytesseract pdf2image opencv-python numpy docling rapidocr-onnxruntime
+```
+
+### 4. Install App to Your Site
+
+Execute the installation onto your active site database:
+```bash
+bench --site <your-site-name> install-app doc_ocr
+bench --site <your-site-name> clear-cache
+bench restart
+```
+
+---
+
+## 🛠️ Typical Usage Workflow
+
+1. Open **Invoice OCR** inside your ERPNext deployment and click **Add Invoice OCR**.
+2. **Upload** a scanned or digital PDF/Image of an invoice and click **Save**.
+3. **Wait briefly.** The backend will automatically farm the extraction out to a background Job. *You do not need to refresh the page; the frontend UI will auto-populate and notify you instantly as soon as the results are returned.*
+4. Review the parsed data, line items, and Confidence Score. Notice the **Party Type** and **Invoice Type** will be auto-set, and your **Party Name** mapped. If you want, click **View Raw JSON** to debug the ML output.
 5. **Submit** the record.
-6. Click **Create Invoice** to push the items natively to standard ERPNext modules. If successful, you will be automatically redirected to the newly created invoice document.
+6. Click **Create Invoice** to natively push the extracted data into a standard ERPNext modules system object.
